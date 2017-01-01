@@ -4,11 +4,7 @@
   
   Richard Huish 2016
   
-  ESP8266 based with local home-assistant.io GUI,
-  
-    433Mhz transmitter for lighting control
-    
-    and DHT22 temperature-humidity sensor
+  ESP8266 based with local home-assistant.io GUI, 433Mhz transmitter for lighting control and DHT22 temperature-humidity sensor
     
   ----------
   
@@ -30,7 +26,7 @@
   
   The circuit:
   
-  NodeMCU Amica (ESP8266)
+    NodeMCU Amica (ESP8266)
   
   Inputs:
   
