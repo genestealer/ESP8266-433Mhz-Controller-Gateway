@@ -23,7 +23,9 @@
   
   ----------
   
-  GUi: Locally hosted home assistant https://home-assistant.io
+  GUI: Locally hosted home assistant https://home-assistant.io
+  
+  MQTT: Locally hosted broker https://mosquitto.org/
   
   ----------
   
