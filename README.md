@@ -2,6 +2,13 @@
 
 433Mhz transmitter MQTT gateway running on ESP (ESP8266 NodeMCU) - Arduino platformIO Edit
 
+## Matching Home Assistant Home Automation Hub Configuration
+
+https://github.com/Genestealer/Home-Assistant-Configuration
+
+
+
+## Code Header Copy
 
   Lighting Controller
   
