@@ -52,4 +52,5 @@
     
     ESP lED lights to show WIFI conenction.
 
+![alt text](Lighting_Gatway.jpg "A photo of my setup")
 
