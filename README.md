@@ -5,7 +5,7 @@
 
   Lighting Controller
   
-  Richard Huish 2016
+  Richard Huish 2016-2017
   
   ESP8266 based with local home-assistant.io GUI, 433Mhz transmitter for lighting control and DHT22 temperature-humidity sensor
     
