@@ -70,10 +70,12 @@ const char* subscribeLightingGatewayTopic = secrete_subscribeLightingGatewayTopi
 const char* publishTemperatureTopic = secrete_publishTemperatureTopic; // E.G. Home/Room/temperature
 const char* publishHumidityTopic = secrete_publishHumidityTopic; // E.G. Home/Room/humidity
 const char* publishLastWillTopic = secrete_publishLastWillTopic; // E.G. Home/LightingGateway/status"
-const char* publishClientName = secrete_publishClientName; // E.G. Home/LightingGateway/status"
-const char* publishIpAddress = secrete_publishIpAddress; // E.G. Home/LightingGateway/status"
-const char* publishSignalStrength = secrete_publishSignalStrength; // E.G. Home/LightingGateway/status"
-const char* publishHostName = secrete_publishHostName; // E.G. Home/LightingGateway/status"
+const char* publishClientName = secrete_publishClientName; // E.G. Home/LightingGateway/clientName"
+const char* publishIpAddress = secrete_publishIpAddress; // E.G. Home/LightingGateway/IpAddress"
+const char* publishSignalStrength = secrete_publishSignalStrength; // E.G. Home/LightingGateway/SignalStrength"
+const char* publishHostName = secrete_publishHostName; // E.G. Home/LightingGateway/HostName"
+const char* publishSSID = secrete_publishSSID; // E.G. Home/LightingGateway/SSID"
+
 
 // MQTT instance
 WiFiClient espClient;
@@ -171,6 +173,7 @@ void mqttcallback(char* topic, byte* payload, unsigned int length) {
 /*
   Non-Blocking mqtt reconnect.
   Called from checkMqttConnection.
+  Based on example from 5ace47b Sep 7, 2015 https://github.com/knolleary/pubsubclient/blob/master/examples/mqtt_reconnect_nonblocking/mqtt_reconnect_nonblocking.ino
 */
 boolean mqttReconnect() {
   // Call on the background functions to allow them to do their thing
@@ -191,7 +194,6 @@ boolean mqttReconnect() {
     sprintf(buf, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
     mqttClient.publish(publishIpAddress, buf, true);
 
-
     // Publish the Wi-Fi signal quality (RSSI), retained = true
     String tempVar = String(WiFi.RSSI());
     mqttClient.publish(publishSignalStrength, tempVar.c_str(), true);
@@ -199,14 +201,13 @@ boolean mqttReconnect() {
     // Publish the device DHCP hostname, retained = true
     mqttClient.publish(publishHostName, WiFi.hostname().c_str(), true);
 
-
+    // Publish the WiFi SSID, retained = true
+    mqttClient.publish(publishSSID, WiFi.SSID().c_str(), true);
 
     // Resubscribe to feeds
     mqttClient.subscribe(subscribeLightingGatewayTopic);
 
     Serial.println("connected");
-
-
 
   } else {
     Serial.print("Failed MQTT connection, rc=");
