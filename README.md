@@ -20,7 +20,7 @@
   
   ----------
   
-  GUi: Locally hosted home assistant
+  GUi: Locally hosted home assistant https://home-assistant.io
   
   ----------
   
