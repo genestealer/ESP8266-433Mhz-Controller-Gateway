@@ -70,6 +70,10 @@ const char* subscribeLightingGatewayTopic = secrete_subscribeLightingGatewayTopi
 const char* publishTemperatureTopic = secrete_publishTemperatureTopic; // E.G. Home/Room/temperature
 const char* publishHumidityTopic = secrete_publishHumidityTopic; // E.G. Home/Room/humidity
 const char* publishLastWillTopic = secrete_publishLastWillTopic; // E.G. Home/LightingGateway/status"
+const char* publishClientName = secrete_publishClientName; // E.G. Home/LightingGateway/status"
+const char* publishIpAddress = secrete_publishIpAddress; // E.G. Home/LightingGateway/status"
+const char* publishSignalStrength = secrete_publishSignalStrength; // E.G. Home/LightingGateway/status"
+const char* publishHostName = secrete_publishHostName; // E.G. Home/LightingGateway/status"
 
 // MQTT instance
 WiFiClient espClient;
@@ -104,8 +108,12 @@ void setup_wifi() {
   }
   Serial.print("");
   Serial.println("WiFi connected");
-  Serial.print("IP address: ");
+
+  Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
+  Serial.print("Connected, IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.printf("Hostname: %s\n", WiFi.hostname().c_str());
+
   digitalWrite(DIGITAL_PIN_LED_NODEMCU, LOW); // Lights on LOW. Light the NodeMCU LED to show wifi connection.
 }
 
@@ -172,8 +180,26 @@ boolean mqttReconnect() {
 
     Serial.print("Attempting MQTT connection...");
 
-    // Once connected, update status to online - will Message will drop in if we go offline ...
+    // Once connected, update status to online, retained = true - last will Message will drop in if we go offline ...
     mqttClient.publish(publishLastWillTopic, "online", true);
+
+    // Publish device name, retained = true
+    mqttClient.publish(publishClientName, clientName);
+
+    // Publish device IP Address
+    char buf[16];
+    sprintf(buf, "IP:%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+    mqttClient.publish(publishIpAddress, buf);
+
+
+    // Publish the Wi-Fi signal quality (RSSI)
+    String tempVar = String(WiFi.RSSI());
+    mqttClient.publish(publishSignalStrength, tempVar.c_str());
+
+    // Publish the device DHCP hostname
+    mqttClient.publish(publishHostName, WiFi.hostname().c_str());
+
+
 
     // Resubscribe to feeds
     mqttClient.subscribe(subscribeLightingGatewayTopic);
@@ -230,6 +256,11 @@ void mtqqPublish() {
     if (mqttClient.connected()) {
 
       // Publish data
+
+      // Publish the Wi-Fi signal quality (RSSI)
+      String tempVar = String(WiFi.RSSI());
+      mqttClient.publish(publishSignalStrength, tempVar.c_str());
+      Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
 
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
