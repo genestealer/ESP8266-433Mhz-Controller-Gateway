@@ -34,7 +34,7 @@
 #include <RCSwitch.h> //  https://github.com/sui77/rc-switch
 #include <DHT.h>  //  https://github.com/adafruit/DHT-sensor-library
 #include <Adafruit_Sensor.h> // have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
-#include <secretes.h>
+#include <secretes.h> // Passwords etc not for github
 
 
 // DHT sensor parameters
