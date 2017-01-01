@@ -45,8 +45,8 @@
 DHT dht(DHTPIN, DHTTYPE, 15);
 
 // WiFi parameters
-const char* wifi_ssid = secrete_wifi_ssid;
-const char* wifi_password = secrete_wifi_password;
+const char* wifi_ssid = secrete_wifi_ssid; // Wifi access point SSID
+const char* wifi_password = secrete_wifi_password; // Wifi access point password
 
 // 433Mhz transmitter parameters
 const int tx433Mhz_pin = 2; // GPIO pin 2 (NODEMCU Pin D4)
@@ -56,19 +56,19 @@ const int setPulseLength = 305;
 RCSwitch mySwitch = RCSwitch();
 
 // MQTT Settings
-const char* mqtt_server = secrete_mqtt_server;
-const char* clientName = secrete_clientName; //
-const char* mqtt_username = secrete_mqtt_username;
-const char* mqtt_password = secrete_mqtt_password;
+const char* mqtt_server = secrete_mqtt_server; // E.G. 192.168.1.xx
+const char* clientName = secrete_clientName; // Client to report to MQTT
+const char* mqtt_username = secrete_mqtt_username; // MQTT Username
+const char* mqtt_password = secrete_mqtt_password; // MQTT Password
 boolean willRetain = true; // MQTT Last Will and Testament
 const char* willMessage = "offline"; // MQTT Last Will and Testament Message
 
 // Subscribe
-const char* subscribeLightingGatewayTopic = secrete_subscribeLightingGatewayTopic; //
+const char* subscribeLightingGatewayTopic = secrete_subscribeLightingGatewayTopic; // E.G. Home/LightingGateway/transmit
 // Publish
-const char* publishTemperatureTopic = secrete_publishTemperatureTopic; //
-const char* publishHumidityTopic = secrete_publishHumidityTopic; //
-const char* publishLastWillTopic = secrete_publishLastWillTopic; //
+const char* publishTemperatureTopic = secrete_publishTemperatureTopic; // E.G. Home/Room/temperature
+const char* publishHumidityTopic = secrete_publishHumidityTopic; // E.G. Home/Room/humidity
+const char* publishLastWillTopic = secrete_publishLastWillTopic; // E.G. Home/LightingGateway/status"
 
 // MQTT instance
 WiFiClient espClient;
