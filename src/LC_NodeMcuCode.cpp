@@ -184,20 +184,20 @@ boolean mqttReconnect() {
     mqttClient.publish(publishLastWillTopic, "online", true);
 
     // Publish device name, retained = true
-    mqttClient.publish(publishClientName, clientName);
+    mqttClient.publish(publishClientName, clientName, true);
 
-    // Publish device IP Address
+    // Publish device IP Address, retained = true
     char buf[16];
-    sprintf(buf, "IP:%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
-    mqttClient.publish(publishIpAddress, buf);
+    sprintf(buf, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+    mqttClient.publish(publishIpAddress, buf, true);
 
 
-    // Publish the Wi-Fi signal quality (RSSI)
+    // Publish the Wi-Fi signal quality (RSSI), retained = true
     String tempVar = String(WiFi.RSSI());
-    mqttClient.publish(publishSignalStrength, tempVar.c_str());
+    mqttClient.publish(publishSignalStrength, tempVar.c_str(), true);
 
-    // Publish the device DHCP hostname
-    mqttClient.publish(publishHostName, WiFi.hostname().c_str());
+    // Publish the device DHCP hostname, retained = true
+    mqttClient.publish(publishHostName, WiFi.hostname().c_str(), true);
 
 
 
