@@ -11,7 +11,8 @@
   DHT.h             https://github.com/adafruit/DHT-sensor-library
   Adafruit_Sensor.g https://github.com/adafruit/Adafruit_Sensor required for DHT.h
   ----------
-  GUi: Locally hosted home assistant
+  GUI: Locally hosted home assistant
+  MQTT: Locally hosted broker https://mosquitto.org/
   ----------
   The circuit:
   NodeMCU Amica (ESP8266)
