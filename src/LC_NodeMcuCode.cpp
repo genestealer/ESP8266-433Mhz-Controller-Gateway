@@ -99,7 +99,7 @@ void setup_wifi() {
      network-issues with your other WiFi-devices on your WiFi-network. */
   WiFi.mode(WIFI_STA);
 
-  // Connect to a WiFi network
+  // Connect to the WiFi network
   Serial.println();
   Serial.print("Connecting to ");
   Serial.print(wifi_ssid);
@@ -258,10 +258,9 @@ void mtqqPublish() {
 
       // Publish data
 
-      // Publish the Wi-Fi signal quality (RSSI)
+      // Publish the Wi-Fi signal quality (RSSI), retained = true
       String tempVar = String(WiFi.RSSI());
-      mqttClient.publish(publishSignalStrength, tempVar.c_str());
-      Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
+      mqttClient.publish(publishSignalStrength, tempVar.c_str(), true);
 
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
