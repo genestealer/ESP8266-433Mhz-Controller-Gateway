@@ -1,15 +1,15 @@
 /***************************************************
   Lighting Controller
-  Richard Huish 2016
+  Richard Huish 2016-207
   ESP8266 based with local home-assistant.io GUI,
     433Mhz transmitter for lighting control
     and DHT22 temperature-humidity sensor
   ----------
   Key Libraries:
-  ESP8266WiFi.h>    https://github.com/esp8266/Arduino
+  ESP8266WiFi.h    https://github.com/esp8266/Arduino
   RCSwitch.h        https://github.com/sui77/rc-switch
   DHT.h             https://github.com/adafruit/DHT-sensor-library
-  Adafruit_Sensor.g https://github.com/adafruit/Adafruit_Sensor required for DHT.h
+  Adafruit_Sensor.h https://github.com/adafruit/Adafruit_Sensor required for DHT.h
   ----------
   GUI: Locally hosted home assistant
   MQTT: Locally hosted broker https://mosquitto.org/
@@ -35,7 +35,7 @@
 #include <RCSwitch.h> //  https://github.com/sui77/rc-switch
 #include <DHT.h>  //  https://github.com/adafruit/DHT-sensor-library
 #include <Adafruit_Sensor.h> // have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
-#include <secretes.h> // Passwords etc not for github
+#include <private.h> // Passwords etc not for github
 
 
 // DHT sensor parameters
@@ -46,8 +46,8 @@
 DHT dht(DHTPIN, DHTTYPE, 15);
 
 // WiFi parameters
-const char* wifi_ssid = secrete_wifi_ssid; // Wifi access point SSID
-const char* wifi_password = secrete_wifi_password; // Wifi access point password
+const char* wifi_ssid = secret_wifi_ssid; // Wifi access point SSID
+const char* wifi_password = secret_wifi_password; // Wifi access point password
 
 // 433Mhz transmitter parameters
 const int tx433Mhz_pin = 2; // GPIO pin 2 (NODEMCU Pin D4)
@@ -57,24 +57,24 @@ const int setPulseLength = 305;
 RCSwitch mySwitch = RCSwitch();
 
 // MQTT Settings
-const char* mqtt_server = secrete_mqtt_server; // E.G. 192.168.1.xx
-const char* clientName = secrete_clientName; // Client to report to MQTT
-const char* mqtt_username = secrete_mqtt_username; // MQTT Username
-const char* mqtt_password = secrete_mqtt_password; // MQTT Password
+const char* mqtt_server = secret_mqtt_server; // E.G. 192.168.1.xx
+const char* clientName = secret_clientName; // Client to report to MQTT
+const char* mqtt_username = secret_mqtt_username; // MQTT Username
+const char* mqtt_password = secret_mqtt_password; // MQTT Password
 boolean willRetain = true; // MQTT Last Will and Testament
 const char* willMessage = "offline"; // MQTT Last Will and Testament Message
 
 // Subscribe
-const char* subscribeLightingGatewayTopic = secrete_subscribeLightingGatewayTopic; // E.G. Home/LightingGateway/transmit
+const char* subscribeLightingGatewayTopic = secret_subscribeLightingGatewayTopic; // E.G. Home/LightingGateway/transmit
 // Publish
-const char* publishTemperatureTopic = secrete_publishTemperatureTopic; // E.G. Home/Room/temperature
-const char* publishHumidityTopic = secrete_publishHumidityTopic; // E.G. Home/Room/humidity
-const char* publishLastWillTopic = secrete_publishLastWillTopic; // E.G. Home/LightingGateway/status"
-const char* publishClientName = secrete_publishClientName; // E.G. Home/LightingGateway/clientName"
-const char* publishIpAddress = secrete_publishIpAddress; // E.G. Home/LightingGateway/IpAddress"
-const char* publishSignalStrength = secrete_publishSignalStrength; // E.G. Home/LightingGateway/SignalStrength"
-const char* publishHostName = secrete_publishHostName; // E.G. Home/LightingGateway/HostName"
-const char* publishSSID = secrete_publishSSID; // E.G. Home/LightingGateway/SSID"
+const char* publishTemperatureTopic = secret_publishTemperatureTopic; // E.G. Home/Room/temperature
+const char* publishHumidityTopic = secret_publishHumidityTopic; // E.G. Home/Room/humidity
+const char* publishLastWillTopic = secret_publishLastWillTopic; // E.G. Home/LightingGateway/status"
+const char* publishClientName = secret_publishClientName; // E.G. Home/LightingGateway/clientName"
+const char* publishIpAddress = secret_publishIpAddress; // E.G. Home/LightingGateway/IpAddress"
+const char* publishSignalStrength = secret_publishSignalStrength; // E.G. Home/LightingGateway/SignalStrength"
+const char* publishHostName = secret_publishHostName; // E.G. Home/LightingGateway/HostName"
+const char* publishSSID = secret_publishSSID; // E.G. Home/LightingGateway/SSID"
 
 
 // MQTT instance
