@@ -13,6 +13,7 @@
   ----------
   GUI: Locally hosted home assistant
   MQTT: Locally hosted broker https://mosquitto.org/
+  OTA updates
   ----------
   The circuit:
   NodeMCU Amica (ESP8266)
@@ -36,7 +37,9 @@
 #include <DHT.h>  //  https://github.com/adafruit/DHT-sensor-library
 #include <Adafruit_Sensor.h> // have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
 #include <private.h> // Passwords etc not for github
-
+#include <ESP8266mDNS.h>   // Needed for Over-the-Air ESP8266 programming
+#include <WiFiUdp.h>       // Needed for Over-the-Air ESP8266 programming
+#include <ArduinoOTA.h>    // Needed for Over-the-Air ESP8266 programming
 
 // DHT sensor parameters
 #define DHTPIN 5 // GPIO pin 5 (NodeMCU Pin D1)
@@ -91,6 +94,9 @@ const long publishInterval = 60000; // Publish requency in milliseconds 60000 = 
 const int DIGITAL_PIN_LED_ESP = 2; // Define LED on ESP8266 sub-modual
 const int DIGITAL_PIN_LED_NODEMCU = 16; // Define LED on NodeMCU board - Lights on pin LOW
 
+// Start Code re-use code block
+//##################################################################################
+//##################################################################################
 
 // Setp the connection to WIFI and the MQTT Broker. Normally called only once from setup
 void setup_wifi() {
@@ -119,18 +125,47 @@ void setup_wifi() {
   digitalWrite(DIGITAL_PIN_LED_NODEMCU, LOW); // Lights on LOW. Light the NodeMCU LED to show wifi connection.
 }
 
-// 433Mhz Gatway
-void transmit433Msg(int msgToSend) {
-  // Acknowledgements
-  // thisoldgeek/ESP8266-RCSwitch
-  // https://github.com/thisoldgeek/ESP8266-RCSwitch
-  // Find the codes for your RC Switch using https://github.com/ninjablocks/433Utils (RF_Sniffer.ino)
-  // sui77/rc-switch
-  // https://github.com/sui77/rc-switch/tree/c5645170be8cb3044f4a8ca8565bfd2d221ba182
-  mySwitch.send(msgToSend, 24);
-  Serial.println(F("433Mhz TX command sent!"));
+// Setup Over-the-Air programming, called from the setup.
+// https://www.penninkhof.com/2015/12/1610-over-the-air-esp8266-programming-using-platformio/
+void setup_OTA() {
 
+    // Port defaults to 8266
+    // ArduinoOTA.setPort(8266);
+
+    // Hostname defaults to esp8266-[ChipID]
+    // ArduinoOTA.setHostname("myesp8266");
+
+    // No authentication by default
+    // ArduinoOTA.setPassword("admin");
+    ArduinoOTA.onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+        type = "sketch";
+      else // U_SPIFFS
+        type = "filesystem";
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+    });
+    ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+    ArduinoOTA.begin();
 }
+
+
+
 
 
 
@@ -246,6 +281,11 @@ void checkMqttConnection() {
   }
 }
 
+
+// End Code re-use code block
+//##################################################################################
+//##################################################################################
+
 void mtqqPublish() {
 
   // Only run when publishInterval in milliseonds exspires
@@ -279,6 +319,19 @@ void mtqqPublish() {
   }
 }
 
+// 433Mhz Gatway
+void transmit433Msg(int msgToSend) {
+  // Acknowledgements
+  // thisoldgeek/ESP8266-RCSwitch
+  // https://github.com/thisoldgeek/ESP8266-RCSwitch
+  // Find the codes for your RC Switch using https://github.com/ninjablocks/433Utils (RF_Sniffer.ino)
+  // sui77/rc-switch
+  // https://github.com/sui77/rc-switch/tree/c5645170be8cb3044f4a8ca8565bfd2d221ba182
+  mySwitch.send(msgToSend, 24);
+  Serial.println(F("433Mhz TX command sent!"));
+
+}
+
 
 void setup() {
   // Initialize pins
@@ -305,6 +358,12 @@ void setup() {
   yield();
   // Setup wifi
   setup_wifi();
+
+  // Call on the background functions to allow them to do their thing
+  yield();
+  // Setup OTA updates.
+  setup_OTA();
+
   // Call on the background functions to allow them to do their thing
   yield();
   // Set MQTT settings
@@ -325,6 +384,12 @@ void loop() {
   checkMqttConnection();
   yield();  // call on the background functions to allow them to do their thing.
 
+  // Call on the background functions to allow them to do their thing
+  yield();
   // Publish MQTT
   mtqqPublish();
+
+  // Call on the background functions to allow them to do their thing
+  yield();
+  ArduinoOTA.handle();
 }
