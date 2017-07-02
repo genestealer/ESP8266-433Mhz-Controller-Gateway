@@ -46,8 +46,7 @@
 #include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming
 #include <ArduinoJson.h>     // For sending MQTT JSON messages
 
-#define MQTT_VERSION MQTT_VERSION_3_1_1
-#define MQTT_MAX_PACKET_SIZE 600
+
 
 
 // DHT sensor parameters
@@ -75,6 +74,9 @@ const char* mqtt_username = secret_mqtt_username; // MQTT Username
 const char* mqtt_password = secret_mqtt_password; // MQTT Password
 boolean willRetain = true; // MQTT Last Will and Testament
 const char* willMessage = "offline"; // MQTT Last Will and Testament Message
+const int json_buffer_size = 256; //JSON_OBJECT_SIZE(10);
+//#define MQTT_MAX_PACKET_SIZE 256 // Changed in platform.io build_flags. https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
+
 
 // Subscribe
 const char* subscribeLightingGatewayTopic = secret_subscribeLightingGatewayTopic; // E.G. Home/LightingGateway/transmit
@@ -141,7 +143,6 @@ void setup_wifi() {
 // Setup Over-the-Air programming, called from the setup.
 // https://www.penninkhof.com/2015/12/1610-over-the-air-esp8266-programming-using-platformio/
 void setup_OTA() {
-
     // Port defaults to 8266
     // ArduinoOTA.setPort(8266);
 
@@ -189,7 +190,6 @@ void transmit433Msg(int msgToSend) {
   // https://github.com/sui77/rc-switch/tree/c5645170be8cb3044f4a8ca8565bfd2d221ba182
   mySwitch.send(msgToSend, 24);
   Serial.println(F("433Mhz TX command sent!"));
-
 }
 
 
@@ -268,7 +268,7 @@ boolean mqttReconnect() {
 
     Serial.println("connected");
 
-    // New JSON meathod
+    // New JSON method
 
     // uint8_t macAddrBuf[6];
     // WiFi.macAddress(macAddrBuf);
@@ -281,19 +281,22 @@ boolean mqttReconnect() {
     // create a JSON object
     // Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
     // doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
-    StaticJsonBuffer<300> jsonBuffer;
+    StaticJsonBuffer<json_buffer_size> jsonBuffer;
     JsonObject& root = jsonBuffer.createObject();
     // INFO: the data must be converted into a string; a problem occurs when using floats...
     root["ClientName"] = String(clientName);
     root["IP"] = String(bufIP);
-    //root["MAC"] = String(bufMAC);
-    // root["RSSI"] = String(WiFi.RSSI());
-    // root["HostName"] = String(WiFi.hostname());
-    // root["ConnectedSSID"] = String(WiFi.SSID());
+    root["MAC"] = String(bufMAC);
+    root["RSSI"] = String(WiFi.RSSI());
+    root["HostName"] = String(WiFi.hostname());
+    root["ConnectedSSID"] = String(WiFi.SSID());
     root.prettyPrintTo(Serial);
-    char data[300];
+    char data[json_buffer_size];
     root.printTo(data, root.measureLength() + 1);
+    // char data[root.measureLength() + 1];
+    // root.printTo(data, sizeof(data));
     mqttClient.publish(MQTT_SENSOR_TOPIC, data, true);
+    Serial.println("JSON Published");
   }
   else
   {
