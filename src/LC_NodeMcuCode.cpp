@@ -84,15 +84,13 @@ const char* subscribeLightingGatewayTopic = secret_subscribeLightingGatewayTopic
 const char* publishTemperatureTopic = secret_publishTemperatureTopic; // E.G. Home/Room/temperature
 const char* publishHumidityTopic = secret_publishHumidityTopic; // E.G. Home/Room/humidity
 const char* publishLastWillTopic = secret_publishLastWillTopic; // E.G. Home/LightingGateway/status"
-const char* publishClientName = secret_publishClientName; // E.G. Home/LightingGateway/clientName"
-const char* publishIpAddress = secret_publishIpAddress; // E.G. Home/LightingGateway/IpAddress"
-const char* publishSignalStrength = secret_publishSignalStrength; // E.G. Home/LightingGateway/SignalStrength"
-const char* publishHostName = secret_publishHostName; // E.G. Home/LightingGateway/HostName"
-const char* publishSSID = secret_publishSSID; // E.G. Home/LightingGateway/SSID"
-
-
-const char* MQTT_SENSOR_TOPIC = "HUISH/TEST";
-
+const char* publishClientNameTopic = secret_publishClientNameTopic; // E.G. Home/LightingGateway/clientName"
+const char* publishIpAddressTopic = secret_publishIpAddressTopic; // E.G. Home/LightingGateway/IpAddress"
+const char* publishSignalStrengthTopic = secret_publishSignalStrengthTopic; // E.G. Home/LightingGateway/SignalStrength"
+const char* publishHostNameTopic = secret_publishHostNameTopic; // E.G. Home/LightingGateway/HostName"
+const char* publishSSIDTopic = secret_publishSSIDTopic; // E.G. Home/LightingGateway/SSID"
+const char* publishSensorJsonTopic = secret_publishSensorJsonTopic;
+const char* publishStatusJsonTopic = secret_publishStatusJsonTopic;
 
 
 // MQTT instance
@@ -246,22 +244,22 @@ boolean mqttReconnect() {
     mqttClient.publish(publishLastWillTopic, "online", true);
 
     // Publish device name, retained = true
-    mqttClient.publish(publishClientName, clientName, true);
+    mqttClient.publish(publishClientNameTopic, clientName, true);
 
     // Publish device IP Address, retained = true
     char bufIP[16];
     sprintf(bufIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
-    mqttClient.publish(publishIpAddress, bufIP, true);
+    mqttClient.publish(publishIpAddressTopic, bufIP, true);
 
     // Publish the Wi-Fi signal quality (RSSI), retained = true
     String tempVarRssi = String(WiFi.RSSI());
-    mqttClient.publish(publishSignalStrength, tempVarRssi.c_str(), true);
+    mqttClient.publish(publishSignalStrengthTopic, tempVarRssi.c_str(), true);
 
     // Publish the device DHCP hostname, retained = true
-    mqttClient.publish(publishHostName, WiFi.hostname().c_str(), true);
+    mqttClient.publish(publishHostNameTopic, WiFi.hostname().c_str(), true);
 
     // Publish the WiFi SSID, retained = true
-    mqttClient.publish(publishSSID, WiFi.SSID().c_str(), true);
+    mqttClient.publish(publishSSIDTopic, WiFi.SSID().c_str(), true);
 
     // Resubscribe to feeds
     mqttClient.subscribe(subscribeLightingGatewayTopic);
@@ -269,11 +267,6 @@ boolean mqttReconnect() {
     Serial.println("connected");
 
     // New JSON method
-
-    // uint8_t macAddrBuf[6];
-    // WiFi.macAddress(macAddrBuf);
-    // String macAddress;
-    // sprintf(macAddress, "%02x:%02x:%02x:%02x:%02x:%02x", macAddrBuf[0], macAddrBuf[1], macAddrBuf[2], macAddrBuf[3], macAddrBuf[4], macAddrBuf[5] );
 
     char bufMAC[6];
     sprintf(bufMAC, "%02x:%02x:%02x:%02x:%02x:%02x", WiFi.macAddress()[0], WiFi.macAddress()[1], WiFi.macAddress()[2], WiFi.macAddress()[3], WiFi.macAddress()[4], WiFi.macAddress()[5] );
@@ -293,9 +286,7 @@ boolean mqttReconnect() {
     root.prettyPrintTo(Serial);
     char data[json_buffer_size];
     root.printTo(data, root.measureLength() + 1);
-    // char data[root.measureLength() + 1];
-    // root.printTo(data, sizeof(data));
-    mqttClient.publish(MQTT_SENSOR_TOPIC, data, true);
+    mqttClient.publish(publishStatusJsonTopic, data, true);
     Serial.println("JSON Published");
   }
   else
@@ -356,7 +347,7 @@ void mtqqPublish() {
 
       // Publish the Wi-Fi signal quality (RSSI), retained = true
       String tempVarRssi = String(WiFi.RSSI());
-      mqttClient.publish(publishSignalStrength, tempVarRssi.c_str(), true);
+      mqttClient.publish(publishSignalStrengthTopic, tempVarRssi.c_str(), true);
 
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
