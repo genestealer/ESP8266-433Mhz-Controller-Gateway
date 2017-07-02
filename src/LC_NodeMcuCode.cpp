@@ -271,7 +271,7 @@ boolean mqttReconnect() {
     char bufMAC[6];
     sprintf(bufMAC, "%02x:%02x:%02x:%02x:%02x:%02x", WiFi.macAddress()[0], WiFi.macAddress()[1], WiFi.macAddress()[2], WiFi.macAddress()[3], WiFi.macAddress()[4], WiFi.macAddress()[5] );
 
-    // create a JSON object
+    // Create a JSON object
     // Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
     // doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
     StaticJsonBuffer<json_buffer_size> jsonBuffer;
@@ -287,7 +287,7 @@ boolean mqttReconnect() {
     char data[json_buffer_size];
     root.printTo(data, root.measureLength() + 1);
     mqttClient.publish(publishStatusJsonTopic, data, true);
-    Serial.println("JSON Published");
+    Serial.println("JSON Status Published");
   }
   else
   {
@@ -361,6 +361,19 @@ void mtqqPublish() {
         Serial.print(F("Failed to humidity to [")), Serial.print(publishHumidityTopic), Serial.print("] ");
       else
         Serial.print(F("Humidity published to [")), Serial.print(publishHumidityTopic), Serial.println("] ");
+
+
+      // New JSON
+      StaticJsonBuffer<json_buffer_size> jsonBuffer;
+      JsonObject& root = jsonBuffer.createObject();
+      // INFO: the data must be converted into a string; a problem occurs when using floats...
+      root["Temperature"] = String(dht.readTemperature());
+      root["Humidity"] = String(dht.readHumidity());
+      root.prettyPrintTo(Serial);
+      char data[json_buffer_size];
+      root.printTo(data, root.measureLength() + 1);
+      mqttClient.publish(publishSensorJsonTopic, data, true);
+      Serial.println("JSON Sensor Published");
 
     }
   }
