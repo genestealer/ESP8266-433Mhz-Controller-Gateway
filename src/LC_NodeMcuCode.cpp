@@ -4,6 +4,7 @@
   ESP8266 based with local home-assistant.io GUI,
     433Mhz transmitter for lighting control
     and DHT22 temperature-humidity sensor
+    Temperature and humidity sent as JSON via MQTT
   ----------
   Key Libraries:
   ESP8266WiFi.h    https://github.com/esp8266/Arduino
@@ -23,23 +24,31 @@
     433Mhz Transmitter - GPIO pin 2 (NODEMCU Pin D4)
     LED_NODEMCU - pin 16 (NodeMCU Pin D0)
     LED_ESP - GPIO pin 2 (NodeMCU Pin D4) (Shared with 433Mhz TX)
-    ----------
+  ----------
   Notes:
     NodeMCU lED lights to show MQTT conenction.
     ESP lED lights to show WIFI conenction.
+  ----------
+  Sources:
+  https://github.com/mertenats/open-home-automation/tree/master/ha_mqtt_sensor_dht22
 
 ****************************************************/
 
 // Note: Libaries are inluced in "Project Dependencies" file platformio.ini
-#include <ESP8266WiFi.h>  // ESP8266 core for Arduino https://github.com/esp8266/Arduino
-#include <PubSubClient.h>  // Arduino Client for MQTT https://github.com/knolleary/pubsubclient
-#include <RCSwitch.h> //  https://github.com/sui77/rc-switch
-#include <DHT.h>  //  https://github.com/adafruit/DHT-sensor-library
-#include <Adafruit_Sensor.h> // have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
-#include <private.h> // Passwords etc not for github
-#include <ESP8266mDNS.h>   // Needed for Over-the-Air ESP8266 programming
-#include <WiFiUdp.h>       // Needed for Over-the-Air ESP8266 programming
-#include <ArduinoOTA.h>    // Needed for Over-the-Air ESP8266 programming
+#include <ESP8266WiFi.h>     // ESP8266 core for Arduino https://github.com/esp8266/Arduino
+#include <PubSubClient.h>    // Arduino Client for MQTT https://github.com/knolleary/pubsubclient
+#include <RCSwitch.h>        // RF control lib, https://github.com/sui77/rc-switch
+#include <DHT.h>             // DHT Sensor lib, https://github.com/adafruit/DHT-sensor-library
+#include <Adafruit_Sensor.h> // Have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
+#include <private.h>         // Passwords etc not for github
+#include <ESP8266mDNS.h>     // Needed for Over-the-Air ESP8266 programming
+#include <WiFiUdp.h>         // Needed for Over-the-Air ESP8266 programming
+#include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming
+#include <ArduinoJson.h>     // For sending MQTT JSON messages
+
+#define MQTT_VERSION MQTT_VERSION_3_1_1
+#define MQTT_MAX_PACKET_SIZE 600
+
 
 // DHT sensor parameters
 #define DHTPIN 5 // GPIO pin 5 (NodeMCU Pin D1)
@@ -78,6 +87,10 @@ const char* publishIpAddress = secret_publishIpAddress; // E.G. Home/LightingGat
 const char* publishSignalStrength = secret_publishSignalStrength; // E.G. Home/LightingGateway/SignalStrength"
 const char* publishHostName = secret_publishHostName; // E.G. Home/LightingGateway/HostName"
 const char* publishSSID = secret_publishSSID; // E.G. Home/LightingGateway/SSID"
+
+
+const char* MQTT_SENSOR_TOPIC = "HUISH/TEST";
+
 
 
 // MQTT instance
@@ -166,7 +179,18 @@ void setup_OTA() {
 
 
 
+// 433Mhz Gatway
+void transmit433Msg(int msgToSend) {
+  // Acknowledgements
+  // thisoldgeek/ESP8266-RCSwitch
+  // https://github.com/thisoldgeek/ESP8266-RCSwitch
+  // Find the codes for your RC Switch using https://github.com/ninjablocks/433Utils (RF_Sniffer.ino)
+  // sui77/rc-switch
+  // https://github.com/sui77/rc-switch/tree/c5645170be8cb3044f4a8ca8565bfd2d221ba182
+  mySwitch.send(msgToSend, 24);
+  Serial.println(F("433Mhz TX command sent!"));
 
+}
 
 
 // MQTT payload to transmit via out gateway
@@ -225,13 +249,13 @@ boolean mqttReconnect() {
     mqttClient.publish(publishClientName, clientName, true);
 
     // Publish device IP Address, retained = true
-    char buf[16];
-    sprintf(buf, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
-    mqttClient.publish(publishIpAddress, buf, true);
+    char bufIP[16];
+    sprintf(bufIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+    mqttClient.publish(publishIpAddress, bufIP, true);
 
     // Publish the Wi-Fi signal quality (RSSI), retained = true
-    String tempVar = String(WiFi.RSSI());
-    mqttClient.publish(publishSignalStrength, tempVar.c_str(), true);
+    String tempVarRssi = String(WiFi.RSSI());
+    mqttClient.publish(publishSignalStrength, tempVarRssi.c_str(), true);
 
     // Publish the device DHCP hostname, retained = true
     mqttClient.publish(publishHostName, WiFi.hostname().c_str(), true);
@@ -244,11 +268,40 @@ boolean mqttReconnect() {
 
     Serial.println("connected");
 
-  } else {
+    // New JSON meathod
+
+    // uint8_t macAddrBuf[6];
+    // WiFi.macAddress(macAddrBuf);
+    // String macAddress;
+    // sprintf(macAddress, "%02x:%02x:%02x:%02x:%02x:%02x", macAddrBuf[0], macAddrBuf[1], macAddrBuf[2], macAddrBuf[3], macAddrBuf[4], macAddrBuf[5] );
+
+    char bufMAC[6];
+    sprintf(bufMAC, "%02x:%02x:%02x:%02x:%02x:%02x", WiFi.macAddress()[0], WiFi.macAddress()[1], WiFi.macAddress()[2], WiFi.macAddress()[3], WiFi.macAddress()[4], WiFi.macAddress()[5] );
+
+    // create a JSON object
+    // Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
+    // doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
+    StaticJsonBuffer<300> jsonBuffer;
+    JsonObject& root = jsonBuffer.createObject();
+    // INFO: the data must be converted into a string; a problem occurs when using floats...
+    root["ClientName"] = String(clientName);
+    root["IP"] = String(bufIP);
+    //root["MAC"] = String(bufMAC);
+    // root["RSSI"] = String(WiFi.RSSI());
+    // root["HostName"] = String(WiFi.hostname());
+    // root["ConnectedSSID"] = String(WiFi.SSID());
+    root.prettyPrintTo(Serial);
+    char data[300];
+    root.printTo(data, root.measureLength() + 1);
+    mqttClient.publish(MQTT_SENSOR_TOPIC, data, true);
+  }
+  else
+  {
     Serial.print("Failed MQTT connection, rc=");
     Serial.print(mqttClient.state());
     Serial.println(" try in 1.5 seconds");
   }
+
   return mqttClient.connected();
 }
 
@@ -299,8 +352,8 @@ void mtqqPublish() {
       // Publish data
 
       // Publish the Wi-Fi signal quality (RSSI), retained = true
-      String tempVar = String(WiFi.RSSI());
-      mqttClient.publish(publishSignalStrength, tempVar.c_str(), true);
+      String tempVarRssi = String(WiFi.RSSI());
+      mqttClient.publish(publishSignalStrength, tempVarRssi.c_str(), true);
 
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
@@ -319,18 +372,7 @@ void mtqqPublish() {
   }
 }
 
-// 433Mhz Gatway
-void transmit433Msg(int msgToSend) {
-  // Acknowledgements
-  // thisoldgeek/ESP8266-RCSwitch
-  // https://github.com/thisoldgeek/ESP8266-RCSwitch
-  // Find the codes for your RC Switch using https://github.com/ninjablocks/433Utils (RF_Sniffer.ino)
-  // sui77/rc-switch
-  // https://github.com/sui77/rc-switch/tree/c5645170be8cb3044f4a8ca8565bfd2d221ba182
-  mySwitch.send(msgToSend, 24);
-  Serial.println(F("433Mhz TX command sent!"));
 
-}
 
 
 void setup() {
