@@ -10,7 +10,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
 
 ## Info
 
-  #### ESP8266 433Mhz Controller Gateway (Formally Lighting Controller)
+  #### ESP8266 433Mhz Controller Gateway (Formally: Lighting Controller)
   
   Richard Huish 2016-2017
   
