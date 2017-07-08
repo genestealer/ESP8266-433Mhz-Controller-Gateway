@@ -1,4 +1,4 @@
-# Lighting-Controller-Gatway
+# ESP8266-433Mhz-Controller-Gateway
 
 433Mhz transmitter MQTT gateway running on ESP (ESP8266 NodeMCU) - Arduino platformIO IDE
 
