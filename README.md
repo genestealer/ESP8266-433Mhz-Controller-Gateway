@@ -10,11 +10,13 @@ https://github.com/Genestealer/Home-Assistant-Configuration
 
 ## Info
 
-  Lighting Controller
+  ESP8266 433Mhz Controller Gateway (Formally Lighting Controller)
   
   Richard Huish 2016-2017
   
-  ESP8266 based with local home-assistant.io GUI, 433Mhz transmitter for lighting control and DHT22 temperature-humidity sensor
+  ESP8266 based with local home-assistant.io GUI, 433Mhz transmitter for lighting control and DHT22 temperature-humidity sensor.
+  
+  Temperature and humidity sent as JSON via MQTT
     
   ----------
   
@@ -69,17 +71,21 @@ Key Libraries:
 ----------    
   Notes:
   
-  NodeMCU lED lights to show MQTT conenction.
+  NodeMCU LED lights to show MQTT conenction.
   
-  ESP lED lights to show WIFI conenction.
+  ESP LED lights to show WIFI conenction.
   
 ----------  
   Edits made to the PlatformIO Project Configuration File:
   
-  platform = espressif8266_stage ;https://github.com/esp8266/Arduino/issues/2833 as the standard has an outdated Arduino Core for the ESP8266, ref http://docs.platformio.org/en/latest/platforms/espressif8266.html#over-the-air-ota-update
+      platform = espressif8266_stage 
       
-  build_flags = -DMQTT_MAX_PACKET_SIZE=512 ; overide max JSON size, untill libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
-
+  https://github.com/esp8266/Arduino/issues/2833 as the standard has an outdated Arduino Core for the ESP8266, ref http://docs.platformio.org/en/latest/platforms/espressif8266.html#over-the-air-ota-update
+  
+    build_flags = -DMQTT_MAX_PACKET_SIZE=512
+    
+  Overide max JSON size, untill libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049    
+  
 
 ![alt text](Lighting_Gatway.jpg "A photo of my setup")
 
