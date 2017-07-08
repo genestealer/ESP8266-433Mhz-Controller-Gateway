@@ -43,7 +43,7 @@
   https://github.com/mertenats/open-home-automation/tree/master/ha_mqtt_sensor_dht22
   Create a JSON object
     Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
-    doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
+    Doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
 
 ****************************************************/
 
@@ -58,6 +58,7 @@
 #include <WiFiUdp.h>         // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
 #include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
 #include <ArduinoJson.h>     // For sending MQTT JSON messages https://bblanchon.github.io/ArduinoJson/
+// #include <IRremoteESP8266.h> //https://github.com/markszabo/IRremoteESP8266
 
 // DHT sensor parameters
 #define DHTPIN 5 // GPIO pin 5 (NodeMCU Pin D1)
@@ -145,10 +146,8 @@ void setup_wifi() {
 void setup_OTA() {
     // Port defaults to 8266
     // ArduinoOTA.setPort(8266);
-
     // Hostname defaults to esp8266-[ChipID]
     // ArduinoOTA.setHostname("myesp8266");
-
     // No authentication by default
     // ArduinoOTA.setPassword("admin");
     ArduinoOTA.onStart([]() {
@@ -157,7 +156,6 @@ void setup_OTA() {
         type = "sketch";
       else // U_SPIFFS
         type = "filesystem";
-
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       Serial.println("Start updating " + type);
     });
@@ -269,6 +267,7 @@ boolean mqttReconnect() {
   if (mqttClient.connect(clientName, mqtt_username, mqtt_password, publishLastWillTopic, 0, willRetain, willMessage)) {
 
     Serial.print("Attempting MQTT connection...");
+    // Publish node state data
     publishNodeState();
     // Resubscribe to feeds
     mqttClient.subscribe(subscribeLightingGatewayTopic);
@@ -324,7 +323,7 @@ void mtqqPublishData() {
     previousMillis = currentMillis;
     if (mqttClient.connected()) {
 
-      // Publish data
+      // Publish node state data
       publishNodeState();
 
       // Grab the current state of the sensor
@@ -350,7 +349,11 @@ void mtqqPublishData() {
       root.prettyPrintTo(Serial);
       char data[json_buffer_size];
       root.printTo(data, root.measureLength() + 1);
-      mqttClient.publish(publishSensorJsonTopic, data, true);
+      if (!mqttClient.publish(publishSensorJsonTopic, data))
+        Serial.print(F("Failed to publish JSON sensor data to [")), Serial.print(publishSensorJsonTopic), Serial.print("] ");
+      else
+        Serial.print(F("JSON Sensor data published to [")), Serial.print(publishSensorJsonTopic), Serial.println("] ");
+
       Serial.println("JSON Sensor Published");
 
     }
