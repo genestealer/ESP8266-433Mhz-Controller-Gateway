@@ -1,23 +1,29 @@
 /***************************************************
-  Lighting Controller
+  ESP8266 433Mhz Controller Gateway (Formally: Lighting Controller)
   Richard Huish 2016-207
   ESP8266 based with local home-assistant.io GUI,
-    433Mhz transmitter for lighting control
-    and DHT22 temperature-humidity sensor
+    433Mhz transmitter for remote lighting control
+    and DHT22 temperature-humidity sensor.
     Temperature and humidity sent as JSON via MQTT
   ----------
+  Github: https://github.com/Genestealer/ESP8266-433Mhz-Controller-Gateway
+  ----------
   Key Libraries:
-  ESP8266WiFi.h    https://github.com/esp8266/Arduino
+  ESP8266WiFi.h     https://github.com/esp8266/Arduino
   RCSwitch.h        https://github.com/sui77/rc-switch
   DHT.h             https://github.com/adafruit/DHT-sensor-library
   Adafruit_Sensor.h https://github.com/adafruit/Adafruit_Sensor required for DHT.h
+  ESP8266mDNS.h     https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266mDNS
+  WiFiUdp.h         https://github.com/esp8266/Arduino
+  ArduinoOTA.h      https://github.com/esp8266/Arduino
+  ArduinoJson.h     https://bblanchon.github.io/ArduinoJson/
   ----------
   GUI: Locally hosted home assistant
   MQTT: Locally hosted broker https://mosquitto.org/
   OTA updates
   ----------
   The circuit:
-  NodeMCU Amica (ESP8266)
+    NodeMCU Amica (ESP8266)
   Inputs:
     DHT22 temperature-humidity sensor - GPIO pin 5 (NodeMCU Pin D1)
   Outputs:
@@ -29,8 +35,15 @@
     NodeMCU lED lights to show MQTT conenction.
     ESP lED lights to show WIFI conenction.
   ----------
+  Edits made to the PlatformIO Project Configuration File:
+    platform = espressif8266_stage = https://github.com/esp8266/Arduino/issues/2833 as the standard has an outdated Arduino Core for the ESP8266, ref http://docs.platformio.org/en/latest/platforms/espressif8266.html#over-the-air-ota-update
+    build_flags = -DMQTT_MAX_PACKET_SIZE=512 = Overide max JSON size, untill libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
+  ----------
   Sources:
   https://github.com/mertenats/open-home-automation/tree/master/ha_mqtt_sensor_dht22
+  Create a JSON object
+    Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
+    doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
 
 ****************************************************/
 
@@ -41,13 +54,10 @@
 #include <DHT.h>             // DHT Sensor lib, https://github.com/adafruit/DHT-sensor-library
 #include <Adafruit_Sensor.h> // Have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
 #include <private.h>         // Passwords etc not for github
-#include <ESP8266mDNS.h>     // Needed for Over-the-Air ESP8266 programming
-#include <WiFiUdp.h>         // Needed for Over-the-Air ESP8266 programming
-#include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming
-#include <ArduinoJson.h>     // For sending MQTT JSON messages
-
-
-
+#include <ESP8266mDNS.h>     // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+#include <WiFiUdp.h>         // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+#include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+#include <ArduinoJson.h>     // For sending MQTT JSON messages https://bblanchon.github.io/ArduinoJson/
 
 // DHT sensor parameters
 #define DHTPIN 5 // GPIO pin 5 (NodeMCU Pin D1)
@@ -74,21 +84,15 @@ const char* mqtt_username = secret_mqtt_username; // MQTT Username
 const char* mqtt_password = secret_mqtt_password; // MQTT Password
 boolean willRetain = true; // MQTT Last Will and Testament
 const char* willMessage = "offline"; // MQTT Last Will and Testament Message
-const int json_buffer_size = 256; //JSON_OBJECT_SIZE(10);
-//#define MQTT_MAX_PACKET_SIZE 256 // Changed in platform.io build_flags. https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
-
+const int json_buffer_size = 256;
 
 // Subscribe
 const char* subscribeLightingGatewayTopic = secret_subscribeLightingGatewayTopic; // E.G. Home/LightingGateway/transmit
 // Publish
 const char* publishTemperatureTopic = secret_publishTemperatureTopic; // E.G. Home/Room/temperature
 const char* publishHumidityTopic = secret_publishHumidityTopic; // E.G. Home/Room/humidity
+
 const char* publishLastWillTopic = secret_publishLastWillTopic; // E.G. Home/LightingGateway/status"
-const char* publishClientNameTopic = secret_publishClientNameTopic; // E.G. Home/LightingGateway/clientName"
-const char* publishIpAddressTopic = secret_publishIpAddressTopic; // E.G. Home/LightingGateway/IpAddress"
-const char* publishSignalStrengthTopic = secret_publishSignalStrengthTopic; // E.G. Home/LightingGateway/SignalStrength"
-const char* publishHostNameTopic = secret_publishHostNameTopic; // E.G. Home/LightingGateway/HostName"
-const char* publishSSIDTopic = secret_publishSSIDTopic; // E.G. Home/LightingGateway/SSID"
 const char* publishSensorJsonTopic = secret_publishSensorJsonTopic;
 const char* publishStatusJsonTopic = secret_publishStatusJsonTopic;
 
@@ -107,9 +111,7 @@ const long publishInterval = 60000; // Publish requency in milliseconds 60000 = 
 const int DIGITAL_PIN_LED_ESP = 2; // Define LED on ESP8266 sub-modual
 const int DIGITAL_PIN_LED_NODEMCU = 16; // Define LED on NodeMCU board - Lights on pin LOW
 
-// Start Code re-use code block
-//##################################################################################
-//##################################################################################
+
 
 // Setp the connection to WIFI and the MQTT Broker. Normally called only once from setup
 void setup_wifi() {
@@ -227,6 +229,33 @@ void mqttcallback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+void publishNodeState() {
+  // Update status to online, retained = true - last will Message will drop in if we go offline
+  mqttClient.publish(publishLastWillTopic, "online", true);
+  // Gather data
+  char bufIP[16]; // Wifi IP address
+  sprintf(bufIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
+  char bufMAC[6]; // Wifi MAC address
+  sprintf(bufMAC, "%02x:%02x:%02x:%02x:%02x:%02x", WiFi.macAddress()[0], WiFi.macAddress()[1], WiFi.macAddress()[2], WiFi.macAddress()[3], WiFi.macAddress()[4], WiFi.macAddress()[5] );
+  // Create and publish the JSON object.
+  StaticJsonBuffer<json_buffer_size> jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  // INFO: the data must be converted into a string; a problem occurs when using floats...
+  root["ClientName"] = String(clientName);
+  root["IP"] = String(bufIP);
+  root["MAC"] = String(bufMAC);
+  root["RSSI"] = String(WiFi.RSSI());
+  root["HostName"] = String(WiFi.hostname());
+  root["ConnectedSSID"] = String(WiFi.SSID());
+  root.prettyPrintTo(Serial);
+  char data[json_buffer_size];
+  root.printTo(data, root.measureLength() + 1);
+  if (!mqttClient.publish(publishStatusJsonTopic, data, true)) // retained = true
+    Serial.print(F("Failed to publish JSON Status to [")), Serial.print(publishStatusJsonTopic), Serial.print("] ");
+  else
+    Serial.print(F("JSON Status Published [")), Serial.print(publishStatusJsonTopic), Serial.println("] ");
+}
+
 /*
   Non-Blocking mqtt reconnect.
   Called from checkMqttConnection.
@@ -239,64 +268,19 @@ boolean mqttReconnect() {
   if (mqttClient.connect(clientName, mqtt_username, mqtt_password, publishLastWillTopic, 0, willRetain, willMessage)) {
 
     Serial.print("Attempting MQTT connection...");
-
-    // Once connected, update status to online, retained = true - last will Message will drop in if we go offline ...
-    mqttClient.publish(publishLastWillTopic, "online", true);
-
-    // Publish device name, retained = true
-    mqttClient.publish(publishClientNameTopic, clientName, true);
-
-    // Publish device IP Address, retained = true
-    char bufIP[16];
-    sprintf(bufIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3] );
-    mqttClient.publish(publishIpAddressTopic, bufIP, true);
-
-    // Publish the Wi-Fi signal quality (RSSI), retained = true
-    String tempVarRssi = String(WiFi.RSSI());
-    mqttClient.publish(publishSignalStrengthTopic, tempVarRssi.c_str(), true);
-
-    // Publish the device DHCP hostname, retained = true
-    mqttClient.publish(publishHostNameTopic, WiFi.hostname().c_str(), true);
-
-    // Publish the WiFi SSID, retained = true
-    mqttClient.publish(publishSSIDTopic, WiFi.SSID().c_str(), true);
-
+    publishNodeState();
     // Resubscribe to feeds
     mqttClient.subscribe(subscribeLightingGatewayTopic);
-
-    Serial.println("connected");
-
-    // New JSON method
-
-    char bufMAC[6];
-    sprintf(bufMAC, "%02x:%02x:%02x:%02x:%02x:%02x", WiFi.macAddress()[0], WiFi.macAddress()[1], WiFi.macAddress()[2], WiFi.macAddress()[3], WiFi.macAddress()[4], WiFi.macAddress()[5] );
-
-    // Create a JSON object
-    // Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
-    // doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
-    StaticJsonBuffer<json_buffer_size> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();
-    // INFO: the data must be converted into a string; a problem occurs when using floats...
-    root["ClientName"] = String(clientName);
-    root["IP"] = String(bufIP);
-    root["MAC"] = String(bufMAC);
-    root["RSSI"] = String(WiFi.RSSI());
-    root["HostName"] = String(WiFi.hostname());
-    root["ConnectedSSID"] = String(WiFi.SSID());
-    root.prettyPrintTo(Serial);
-    char data[json_buffer_size];
-    root.printTo(data, root.measureLength() + 1);
-    mqttClient.publish(publishStatusJsonTopic, data, true);
-    Serial.println("JSON Status Published");
+    Serial.println("Connected to MQTT server");
   }
   else
   {
     Serial.print("Failed MQTT connection, rc=");
     Serial.print(mqttClient.state());
-    Serial.println(" try in 1.5 seconds");
+    Serial.println(" try again in 1.5 seconds");
   }
 
-  return mqttClient.connected();
+  return mqttClient.connected(); // Return connection state
 }
 
 /*
@@ -308,7 +292,7 @@ boolean mqttReconnect() {
 */
 void checkMqttConnection() {
   if (!mqttClient.connected()) {
-    // We are not connected. Turn off the wifi LED
+    // We are not connected! Turn off the wifi LED
     digitalWrite(DIGITAL_PIN_LED_ESP, HIGH); // Lights on LOW
     long now = millis();
     if (now - lastReconnectAttempt > 5000) {
@@ -329,11 +313,7 @@ void checkMqttConnection() {
 }
 
 
-// End Code re-use code block
-//##################################################################################
-//##################################################################################
-
-void mtqqPublish() {
+void mtqqPublishData() {
 
   // Only run when publishInterval in milliseonds exspires
   unsigned long currentMillis = millis();
@@ -344,10 +324,7 @@ void mtqqPublish() {
     if (mqttClient.connected()) {
 
       // Publish data
-
-      // Publish the Wi-Fi signal quality (RSSI), retained = true
-      String tempVarRssi = String(WiFi.RSSI());
-      mqttClient.publish(publishSignalStrengthTopic, tempVarRssi.c_str(), true);
+      publishNodeState();
 
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
@@ -427,18 +404,15 @@ void setup() {
 
 /// Main working loop
 void loop() {
-  yield(); // call on the background functions to allow them to do their thing.
-
+  // call on the background functions to allow them to do their thing.
+  yield();
   // First check if we are connected to the MQTT broker
   checkMqttConnection();
-  yield();  // call on the background functions to allow them to do their thing.
-
-  // Call on the background functions to allow them to do their thing
+  // call on the background functions to allow them to do their thing.
   yield();
   // Publish MQTT
-  mtqqPublish();
-
-  // Call on the background functions to allow them to do their thing
+  mtqqPublishData();
+  // call on the background functions to allow them to do their thing.
   yield();
   ArduinoOTA.handle();
 }
