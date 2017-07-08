@@ -248,6 +248,7 @@ void publishNodeState() {
   root["HostName"] = String(WiFi.hostname());
   root["ConnectedSSID"] = String(WiFi.SSID());
   root.prettyPrintTo(Serial);
+  Serial.println(""); // Add new line as prettyPrintTo leaves the line open.
   char data[json_buffer_size];
   root.printTo(data, root.measureLength() + 1);
   if (!mqttClient.publish(publishStatusJsonTopic, data, true)) // retained = true
