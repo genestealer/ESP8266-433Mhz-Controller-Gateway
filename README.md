@@ -10,7 +10,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
 
 ## Info
 
-  ESP8266 433Mhz Controller Gateway (Formally Lighting Controller)
+  #### ESP8266 433Mhz Controller Gateway (Formally Lighting Controller)
   
   Richard Huish 2016-2017
   
@@ -20,7 +20,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
     
   ----------
   
-Key Libraries:
+#### Key Libraries:
   
   ESP8266WiFi.h     // ESP8266 core for Arduino https://github.com/esp8266/Arduino
   
@@ -45,14 +45,8 @@ Key Libraries:
   
   ----------
   
-  GUI: Locally hosted home assistant https://home-assistant.io
-  
-  MQTT: Locally hosted broker https://mosquitto.org/
-  
-  Over the Air Updates (OTA)
-  ----------
-  
-  The circuit:
+ 
+ #### The circuit:
   
     NodeMCU Amica (ESP8266)
   
@@ -69,14 +63,22 @@ Key Libraries:
     LED_ESP - GPIO pin 2 (NodeMCU Pin D4) (Shared with 433Mhz TX)
     
 ----------    
-  Notes:
+
+  #### Notes:
+  
+  GUI: Locally hosted home assistant https://home-assistant.io
+  
+  MQTT: Locally hosted broker https://mosquitto.org/
+  
+  Over the Air Updates (OTA)
   
   NodeMCU LED lights to show MQTT conenction.
   
   ESP LED lights to show WIFI conenction.
   
 ----------  
-  Edits made to the PlatformIO Project Configuration File:
+
+  #### Edits made to the PlatformIO Project Configuration File:
   
       platform = espressif8266_stage 
       
