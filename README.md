@@ -20,13 +20,26 @@ https://github.com/Genestealer/Home-Assistant-Configuration
   
   Key Libraries:
   
-  ESP8266WiFi.h>    https://github.com/esp8266/Arduino
+  ESP8266WiFi.h     // ESP8266 core for Arduino https://github.com/esp8266/Arduino
   
-  RCSwitch.h        https://github.com/sui77/rc-switch
+  PubSubClient.h     // Arduino Client for MQTT https://github.com/knolleary/pubsubclient
   
-  DHT.h             https://github.com/adafruit/DHT-sensor-library
+  RCSwitch.h        // RF control lib, https://github.com/sui77/rc-switch
   
-  Adafruit_Sensor.g https://github.com/adafruit/Adafruit_Sensor required for DHT.h
+  DHT.h          // DHT Sensor lib, https://github.com/adafruit/DHT-sensor-library
+  
+  Adafruit_Sensor.h // Have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
+  
+  private.h        // Passwords etc not for github
+  
+  ESP8266mDNS.h     // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+  
+  WiFiUdp.h        // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+  
+  ArduinoOTA.h      // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
+  
+  ArduinoJson.h    // For sending MQTT JSON messages https://bblanchon.github.io/ArduinoJson/
+  
   
   ----------
   
