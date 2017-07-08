@@ -1,6 +1,6 @@
 # Lighting-Controller-Gatway
 
-433Mhz transmitter MQTT gateway running on ESP (ESP8266 NodeMCU) - Arduino platformIO Edit
+433Mhz transmitter MQTT gateway running on ESP (ESP8266 NodeMCU) - Arduino platformIO IDE
 
 ## Matching Home Assistant Home Automation Hub Configuration
 
@@ -8,7 +8,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
 
 
 
-## Code Header Copy
+## Info
 
   Lighting Controller
   
@@ -18,7 +18,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
     
   ----------
   
-  Key Libraries:
+Key Libraries:
   
   ESP8266WiFi.h     // ESP8266 core for Arduino https://github.com/esp8266/Arduino
   
@@ -47,6 +47,7 @@ https://github.com/Genestealer/Home-Assistant-Configuration
   
   MQTT: Locally hosted broker https://mosquitto.org/
   
+  Over the Air Updates (OTA)
   ----------
   
   The circuit:
@@ -65,13 +66,20 @@ https://github.com/Genestealer/Home-Assistant-Configuration
     
     LED_ESP - GPIO pin 2 (NodeMCU Pin D4) (Shared with 433Mhz TX)
     
-    ----------
-    
+----------    
   Notes:
   
-    NodeMCU lED lights to show MQTT conenction.
-    
-    ESP lED lights to show WIFI conenction.
+  NodeMCU lED lights to show MQTT conenction.
+  
+  ESP lED lights to show WIFI conenction.
+  
+----------  
+  Edits made to the PlatformIO Project Configuration File:
+  
+  platform = espressif8266_stage ;https://github.com/esp8266/Arduino/issues/2833 as the standard has an outdated Arduino Core for the ESP8266, ref http://docs.platformio.org/en/latest/platforms/espressif8266.html#over-the-air-ota-update
+      
+  build_flags = -DMQTT_MAX_PACKET_SIZE=512 ; overide max JSON size, untill libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
+
 
 ![alt text](Lighting_Gatway.jpg "A photo of my setup")
 
