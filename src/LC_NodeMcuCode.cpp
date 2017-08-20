@@ -37,14 +37,13 @@
   ----------
   Edits made to the PlatformIO Project Configuration File:
     platform = espressif8266_stage = https://github.com/esp8266/Arduino/issues/2833 as the standard has an outdated Arduino Core for the ESP8266, ref http://docs.platformio.org/en/latest/platforms/espressif8266.html#over-the-air-ota-update
-    build_flags = -DMQTT_MAX_PACKET_SIZE=512 = Overide max JSON size, untill libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
+    build_flags = -DMQTT_MAX_PACKET_SIZE=512 = Overide max JSON size, until libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049
   ----------
   Sources:
   https://github.com/mertenats/open-home-automation/tree/master/ha_mqtt_sensor_dht22
   Create a JSON object
     Example https://github.com/mertenats/Open-Home-Automation/blob/master/ha_mqtt_sensor_dht22/ha_mqtt_sensor_dht22.ino
     Doc : https://github.com/bblanchon/ArduinoJson/wiki/API%20Reference
-
 ****************************************************/
 
 // Note: Libaries are inluced in "Project Dependencies" file platformio.ini
@@ -144,36 +143,36 @@ void setup_wifi() {
 // Setup Over-the-Air programming, called from the setup.
 // https://www.penninkhof.com/2015/12/1610-over-the-air-esp8266-programming-using-platformio/
 void setup_OTA() {
-    // Port defaults to 8266
-    // ArduinoOTA.setPort(8266);
-    // Hostname defaults to esp8266-[ChipID]
-    // ArduinoOTA.setHostname("myesp8266");
-    // No authentication by default
-    // ArduinoOTA.setPassword("admin");
-    ArduinoOTA.onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
-    });
-    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
-    ArduinoOTA.begin();
+  // Port defaults to 8266
+  // ArduinoOTA.setPort(8266);
+  // Hostname defaults to esp8266-[ChipID]
+  // ArduinoOTA.setHostname("myesp8266");
+  // No authentication by default
+  // ArduinoOTA.setPassword("admin");
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH)
+      type = "sketch";
+    else // U_SPIFFS
+      type = "filesystem";
+    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
 }
 
 
@@ -279,7 +278,6 @@ boolean mqttReconnect() {
     Serial.print(mqttClient.state());
     Serial.println(" try again in 1.5 seconds");
   }
-
   return mqttClient.connected(); // Return connection state
 }
 
@@ -305,7 +303,7 @@ void checkMqttConnection() {
   } else {
     // We are connected.
     digitalWrite(DIGITAL_PIN_LED_ESP, LOW); // Lights on LOW
-    //call on the background functions to allow them to do their thing.
+    //Call on the background functions to allow them to do their thing.
     yield();
     // Client connected: MQTT client loop processing
     mqttClient.loop();
@@ -313,19 +311,32 @@ void checkMqttConnection() {
 }
 
 
-void mtqqPublishData() {
-
+void mqttPublishData() {
   // Only run when publishInterval in milliseonds exspires
   unsigned long currentMillis = millis();
-  // CODE TO MOVE TO functions
   if (currentMillis - previousMillis >= publishInterval) {
-    // save the last time this ran
-    previousMillis = currentMillis;
+    previousMillis = currentMillis; // save the last time this ran
     if (mqttClient.connected()) {
-
       // Publish node state data
       publishNodeState();
 
+      // New JSON data method
+      StaticJsonBuffer<json_buffer_size> jsonBuffer;
+      JsonObject& root = jsonBuffer.createObject();
+      // INFO: the data must be converted into a string; a problem occurs when using floats...
+      root["Temperature"] = String(dht.readTemperature());
+      root["Humidity"] = String(dht.readHumidity());
+      root.prettyPrintTo(Serial);
+      Serial.println(""); // Add new line as prettyPrintTo leaves the line open.
+      char data[json_buffer_size];
+      root.printTo(data, root.measureLength() + 1);
+      if (!mqttClient.publish(publishSensorJsonTopic, data))
+        Serial.print(F("Failed to publish JSON sensor data to [")), Serial.print(publishSensorJsonTopic), Serial.print("] ");
+      else
+        Serial.print(F("JSON Sensor data published to [")), Serial.print(publishSensorJsonTopic), Serial.println("] ");
+      Serial.println("JSON Sensor Published");
+
+      // Old legacy method
       // Grab the current state of the sensor
       String strTemp = String(dht.readTemperature()); //Could use String(dht.readTemperature()).c_str()) to do it all in one line
       if (!mqttClient.publish(publishTemperatureTopic, String(dht.readTemperature()).c_str())) // Convert dht.readTemperature() to string object, then to char array.
@@ -338,30 +349,7 @@ void mtqqPublishData() {
         Serial.print(F("Failed to humidity to [")), Serial.print(publishHumidityTopic), Serial.print("] ");
       else
         Serial.print(F("Humidity published to [")), Serial.print(publishHumidityTopic), Serial.println("] ");
-
-
-      // New JSON
-      StaticJsonBuffer<json_buffer_size> jsonBuffer;
-      JsonObject& root = jsonBuffer.createObject();
-      // INFO: the data must be converted into a string; a problem occurs when using floats...
-      root["Temperature"] = String(dht.readTemperature());
-      root["Humidity"] = String(dht.readHumidity());
-      root.prettyPrintTo(Serial);
-      char data[json_buffer_size];
-      root.printTo(data, root.measureLength() + 1);
-      if (!mqttClient.publish(publishSensorJsonTopic, data))
-        Serial.print(F("Failed to publish JSON sensor data to [")), Serial.print(publishSensorJsonTopic), Serial.print("] ");
-      else
-        Serial.print(F("JSON Sensor data published to [")), Serial.print(publishSensorJsonTopic), Serial.println("] ");
-
-      Serial.println("JSON Sensor Published");
-
-    }
-  }
-}
-
-
-
+    }}}
 
 void setup() {
   // Initialize pins
@@ -383,17 +371,14 @@ void setup() {
   // Optional set protocol (default is 1, will work for most outlets)
   mySwitch.setProtocol(1);
 
-
   // Call on the background functions to allow them to do their thing
   yield();
   // Setup wifi
   setup_wifi();
-
   // Call on the background functions to allow them to do their thing
   yield();
   // Setup OTA updates.
   setup_OTA();
-
   // Call on the background functions to allow them to do their thing
   yield();
   // Set MQTT settings
@@ -404,19 +389,22 @@ void setup() {
   Serial.println("Setup Complete");
 }
 
-
-
-/// Main working loop
+// Main working loop
 void loop() {
-  // call on the background functions to allow them to do their thing.
+  // Call on the background functions to allow them to do their thing.
   yield();
   // First check if we are connected to the MQTT broker
   checkMqttConnection();
-  // call on the background functions to allow them to do their thing.
+  // Call on the background functions to allow them to do their thing.
   yield();
   // Publish MQTT
-  mtqqPublishData();
-  // call on the background functions to allow them to do their thing.
+  mqttPublishData();
+  // Call on the background functions to allow them to do their thing.
   yield();
+  // Check for Over The Air updates
   ArduinoOTA.handle();
+
+  // Deal with millis rollover, hack by resetting the esp every 48 days
+  if (millis() > 4147200000)
+    ESP.restart();
 }
