@@ -1,6 +1,6 @@
 /***************************************************
   ESP8266 433Mhz Controller Gateway (Formally: Lighting Controller)
-  Richard Huish 2016-207
+  Richard Huish 2016-2017
   ESP8266 based with local home-assistant.io GUI,
     433Mhz transmitter for remote lighting control
     and DHT22 temperature-humidity sensor.
@@ -82,7 +82,7 @@ const char* mqtt_server = secret_mqtt_server; // E.G. 192.168.1.xx
 const char* clientName = secret_clientName; // Client to report to MQTT
 const char* mqtt_username = secret_mqtt_username; // MQTT Username
 const char* mqtt_password = secret_mqtt_password; // MQTT Password
-boolean willRetain = true; // MQTT Last Will and Testament
+bool willRetain = true; // MQTT Last Will and Testament
 const char* willMessage = "offline"; // MQTT Last Will and Testament Message
 const int json_buffer_size = 256;
 
@@ -189,43 +189,7 @@ void transmit433Msg(int msgToSend) {
   Serial.println(F("433Mhz TX command sent!"));
 }
 
-
-// MQTT payload to transmit via out gateway
-void mqttcallback(char* topic, byte* payload, unsigned int length) {
-  //If you want to publish a message from within the message callback function, it is necessary to make a copy of the topic and payload values as the client uses the same internal buffer for inbound and outbound messages:
-  //http://www.hivemq.com/blog/mqtt-client-library-encyclopedia-arduino-pubsubclient/
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-
-
-  // create character buffer with ending null terminator (string)
-  int i = 0;
-  for (i = 0; i < length; i++) {
-    message_buff[i] = payload[i];
-  }
-  message_buff[i] = '\0';
-  // Check the value of the message
-  String msgString = String(message_buff);
-  Serial.println(msgString);
-
-  // Check the message topic
-  String srtTopic = topic;
-
-  if (srtTopic.equals(subscribeLightingGatewayTopic)) {
-
-    int msgSend = msgString.toInt();
-    //do the transmittt
-    transmit433Msg(msgSend);
-    delay(500);
-
-  }
-}
-
+// Publish this nodes state via MQTT
 void publishNodeState() {
   // Update status to online, retained = true - last will Message will drop in if we go offline
   mqttClient.publish(publishLastWillTopic, "online", true);
@@ -264,7 +228,6 @@ boolean mqttReconnect() {
   yield();
   // Attempt to connect
   if (mqttClient.connect(clientName, mqtt_username, mqtt_password, publishLastWillTopic, 0, willRetain, willMessage)) {
-
     Serial.print("Attempting MQTT connection...");
     // Publish node state data
     publishNodeState();
@@ -290,7 +253,7 @@ boolean mqttReconnect() {
 */
 void checkMqttConnection() {
   if (!mqttClient.connected()) {
-    // We are not connected! Turn off the wifi LED
+    // We are not connected. Turn off the wifi LED
     digitalWrite(DIGITAL_PIN_LED_ESP, HIGH); // Lights on LOW
     long now = millis();
     if (now - lastReconnectAttempt > 5000) {
@@ -310,17 +273,18 @@ void checkMqttConnection() {
   }
 }
 
-
+// MQTT Publish
 void mqttPublishData() {
   // Only run when publishInterval in milliseonds exspires
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= publishInterval) {
-    previousMillis = currentMillis; // save the last time this ran
+    previousMillis = currentMillis; // Save the last time this ran
+    // Check conenction to MQTT server
     if (mqttClient.connected()) {
       // Publish node state data
       publishNodeState();
 
-      // New JSON data method
+      // JSON data method
       StaticJsonBuffer<json_buffer_size> jsonBuffer;
       JsonObject& root = jsonBuffer.createObject();
       // INFO: the data must be converted into a string; a problem occurs when using floats...
@@ -349,7 +313,46 @@ void mqttPublishData() {
         Serial.print(F("Failed to humidity to [")), Serial.print(publishHumidityTopic), Serial.print("] ");
       else
         Serial.print(F("Humidity published to [")), Serial.print(publishHumidityTopic), Serial.println("] ");
-    }}}
+    }
+  }
+}
+
+// MQTT payload
+// to transmit via out gateway
+void mqttcallback(char* topic, byte* payload, unsigned int length) {
+  //If you want to publish a message from within the message callback function, it is necessary to make a copy of the topic and payload values as the client uses the same internal buffer for inbound and outbound messages:
+  //http://www.hivemq.com/blog/mqtt-client-library-encyclopedia-arduino-pubsubclient/
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+
+  // create character buffer with ending null terminator (string)
+  int i = 0;
+  for (i = 0; i < length; i++) {
+    message_buff[i] = payload[i];
+  }
+  message_buff[i] = '\0';
+  // Check the value of the message
+  String msgString = String(message_buff);
+  Serial.println(msgString);
+
+  // Check the message topic
+  String srtTopic = topic;
+
+  if (srtTopic.equals(subscribeLightingGatewayTopic)) {
+
+    int msgSend = msgString.toInt();
+    //do the transmittt
+    transmit433Msg(msgSend);
+    delay(500);
+
+  }
+}
 
 void setup() {
   // Initialize pins
@@ -358,7 +361,7 @@ void setup() {
   // Initialize pin start values
   digitalWrite(DIGITAL_PIN_LED_NODEMCU, LOW); // Lights on HIGH
   digitalWrite(DIGITAL_PIN_LED_ESP, HIGH); // Lights on LOW
-  // set serial speed
+  // Set serial speed
   Serial.begin(115200);
   Serial.println("Setup Starting");
 
