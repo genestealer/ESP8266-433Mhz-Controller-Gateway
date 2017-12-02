@@ -47,12 +47,12 @@
 ****************************************************/
 
 // Note: Libaries are inluced in "Project Dependencies" file platformio.ini
+#include <private.h>         // Passwords etc not for github
 #include <ESP8266WiFi.h>     // ESP8266 core for Arduino https://github.com/esp8266/Arduino
 #include <PubSubClient.h>    // Arduino Client for MQTT https://github.com/knolleary/pubsubclient
 #include <RCSwitch.h>        // RF control lib, https://github.com/sui77/rc-switch
 #include <DHT.h>             // DHT Sensor lib, https://github.com/adafruit/DHT-sensor-library
 #include <Adafruit_Sensor.h> // Have to add for the DHT to work https://github.com/adafruit/Adafruit_Sensor
-#include <private.h>         // Passwords etc not for github
 #include <ESP8266mDNS.h>     // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
 #include <WiFiUdp.h>         // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
 #include <ArduinoOTA.h>      // Needed for Over-the-Air ESP8266 programming https://github.com/esp8266/Arduino
