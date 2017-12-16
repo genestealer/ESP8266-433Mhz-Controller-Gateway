@@ -87,7 +87,14 @@ https://github.com/Genestealer/Home-Assistant-Configuration
     build_flags = -DMQTT_MAX_PACKET_SIZE=512
     
   Overide max JSON size, until libary is updated to inclde this option https://github.com/knolleary/pubsubclient/issues/110#issuecomment-174953049    
-  
+
+----------  
+
+  #### Example Bill Of Materials
+   [NodeMCU Amica (ESP8266)](https://www.aliexpress.com/item/V3-Wireless-module-NodeMcu-4M-bytes-Lua-WIFI-Internet-of-Things-development-board-based-ESP8266-esp/32647542733.html)
+   DHT22 temperature-humidity sensor - GPIO pin 5 (NodeMCU Pin D1)
+  433Mhz Transmitter - GPIO pin 2 (NODEMCU Pin D4)
+    
 
 ![alt text](Lighting_Gatway.jpg "A photo of my setup")
 
