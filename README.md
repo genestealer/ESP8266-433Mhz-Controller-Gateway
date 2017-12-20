@@ -91,17 +91,12 @@ https://github.com/Genestealer/Home-Assistant-Configuration
 ----------  
 
   #### Example Bill Of Materials
-  [NodeMCU Amica (ESP8266)](https://www.aliexpress.com/item/V3-Wireless-module-NodeMcu-4M-bytes-Lua-WIFI-Internet-of-Things-development-board-based-ESP8266-esp/32647542733.html)
-   
-  [DHT22 temperature-humidity sensor](https://www.aliexpress.com/item/Free-shipping-DHT22-AM2302-replace-SHT11-SHT15-Humidity-temperature-and-humidity-sensor/1872664976.html)
-   
-  [433Mhz ASK Transmitter](https://www.aliexpress.com/item/433MHz-100-Meters-Wireless-Module-Kit-ASK-Transmitter-STX882-ASK-Receiver-SRX882-2Pcs-Copper-Spring-Antenna/32637181317.html)
-   
-  [Breadboard](https://www.aliexpress.com/item/1pcs-Quality-mini-bread-board-breadboard-8-5CM-x-5-5CM-400-holes/32803112223.html)
-   
-  [Breadboard jumper wires](https://www.aliexpress.com/item/Packed-Breadboard-Line-Bread-Board-Jumper-140-pieces-Bread-Board-Cable/32647063474.html)
-   
-  [Example remote control sockets](https://www.amazon.co.uk/Status-Remote-Control-Socket-Pack/dp/B003XOXAVG)
+  - [NodeMCU Amica (ESP8266)](https://www.aliexpress.com/item/V3-Wireless-module-NodeMcu-4M-bytes-Lua-WIFI-Internet-of-Things-development-board-based-ESP8266-esp/32647542733.html)
+   - [DHT22 temperature-humidity sensor](https://www.aliexpress.com/item/Free-shipping-DHT22-AM2302-replace-SHT11-SHT15-Humidity-temperature-and-humidity-sensor/1872664976.html)
+   - [433Mhz ASK Transmitter](https://www.aliexpress.com/item/433MHz-100-Meters-Wireless-Module-Kit-ASK-Transmitter-STX882-ASK-Receiver-SRX882-2Pcs-Copper-Spring-Antenna/32637181317.html)
+   - [Breadboard](https://www.aliexpress.com/item/1pcs-Quality-mini-bread-board-breadboard-8-5CM-x-5-5CM-400-holes/32803112223.html)
+   - [Breadboard jumper wires](https://www.aliexpress.com/item/Packed-Breadboard-Line-Bread-Board-Jumper-140-pieces-Bread-Board-Cable/32647063474.html)
+   - [Example remote control sockets](https://www.amazon.co.uk/Status-Remote-Control-Socket-Pack/dp/B003XOXAVG)
 
 ![alt text](Lighting_Gatway.jpg "A photo of my setup")
 
