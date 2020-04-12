@@ -7,6 +7,7 @@
 https://github.com/Genestealer/Home-Assistant-Configuration
 
 
+  ----------
 
 ## Info
 
@@ -18,7 +19,6 @@ https://github.com/Genestealer/Home-Assistant-Configuration
   
   Temperature and humidity sent as JSON via MQTT
     
-  ----------
   
 #### Key Libraries:
   
